@@ -1,3 +1,12 @@
 <resources>
-    <string name="app_name">BakingApp</string>
+    <string name="app_name">Baking Time</string>
+    <string name="recipe_selected">recipeSelected</string>
+    <string name="video_url">videoUrl</string>
+    <string name="step_instruction">stepInstruction</string>
+    <string name="step_selected">recipeSelected</string>
+    <string name="add_widget">Add widget</string>
+    <string name="title_item_list">Items</string>
+    <string name="title_item_detail">Item Detail</string>
+    <string name="ingredients_label_text">Ingredients</string>
+    <string name="steps_label_text">Steps</string>
 </resources>

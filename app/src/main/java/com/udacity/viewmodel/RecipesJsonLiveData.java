@@ -11,12 +11,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
-public class JsonLiveData extends LiveData<List<Recipe>> {
+public class RecipesJsonLiveData extends LiveData<List<Recipe>> {
 
     private final Context context;
     private final FileObserver fileObserver;
 
-    public JsonLiveData(Context context) {
+    public RecipesJsonLiveData(Context context) {
         this.context = context;
         fileObserver = new FileObserver(NetworkUtils.getPath()) {
             @Override

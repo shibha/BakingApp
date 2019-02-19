@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical">
+    <TextView
+        android:id="@+id/ingredients_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="?attr/actionBarSize"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
+        android:text="@string/ingredients_label_text"
+        android:textSize="@dimen/text_size"
+        android:textStyle="bold" />
+    <TextView
+        android:id="@+id/ingredients_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_size"
+        android:textStyle="bold"
+        android:scrollbars = "vertical"
+        android:background="@drawable/back"/>
+
+</LinearLayout>

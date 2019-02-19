@@ -1,13 +1,14 @@
 package com.udacity.adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
+import com.udacity.activity.RecipeDetailFragmentActivty;
 import com.udacity.model.Recipe;
 import java.util.List;
 import com.udacity.R;
@@ -25,12 +26,13 @@ public class RecipeListViewRecycleAdapter extends RecyclerView.Adapter<RecipeLis
         this.context = context;
     }
 
-
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = mInflater.inflate(R.layout.recipe_list_item, parent, false);
         int height_of_each_item = UIUtils.calculateNoOfRows(context, recipes.size());
-        view.setMinimumHeight(height_of_each_item);
+        GridLayoutManager.LayoutParams params = (GridLayoutManager.LayoutParams) view.getLayoutParams();
+        params.height = height_of_each_item;
+        view.setLayoutParams(params);
         ViewHolder viewHolder = new ViewHolder(view);
         return viewHolder;
     }
@@ -42,10 +44,11 @@ public class RecipeListViewRecycleAdapter extends RecyclerView.Adapter<RecipeLis
         holder.textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-              //Code to move to recipe detail screen
+                Intent intent = new Intent(view.getContext(), RecipeDetailFragmentActivty.class);
+                intent.putExtra(context.getString(R.string.recipe_selected), recipe);
+                context.startActivity(intent);
             }
         });
-        //Picasso.with(imageView.getContext()).load(Recipe.getImage()).fit().into(imageView);
     }
 
     @Override

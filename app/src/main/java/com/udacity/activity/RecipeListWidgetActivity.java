@@ -1,52 +1,48 @@
 package com.udacity.activity;
 
+import android.appwidget.AppWidgetManager;
+import android.arch.lifecycle.ViewModelProviders;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.arch.lifecycle.ViewModelProviders;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import com.udacity.R;
-import com.udacity.adapter.RecipeListViewRecycleAdapter;
+import com.udacity.adapter.RecipeListViewWidgetRecycleAdapter;
 import com.udacity.model.Recipe;
 import com.udacity.viewmodel.RecipesViewModel;
 import java.util.List;
 
-public class RecipeListActivity extends AppCompatActivity {
+public class RecipeListWidgetActivity extends AppCompatActivity {
 
-    private RecipeListViewRecycleAdapter recipeListRecycleViewAdapter;
+    private RecipeListViewWidgetRecycleAdapter recipeListRecycleViewAdapter;
     private RecyclerView recipeRecycleView;
-    private int spanCount = 1;
+    private int widgetId = AppWidgetManager.INVALID_APPWIDGET_ID;;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setResult(RESULT_CANCELED);
         setContentView(R.layout.activity_recipe_list);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setTitle(getTitle());
-        final int orientation = getResources().getConfiguration().orientation;
-
-        if(recipeRecycleView != null && orientation != -1){
-            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                spanCount = 1;
-            } else if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                spanCount = 3;
-            }
-            ((GridLayoutManager) recipeRecycleView.getLayoutManager()).setSpanCount(spanCount);
-        }
-
         RecipesViewModel model =
                 ViewModelProviders.of(this).get(RecipesViewModel.class);
         model.getRecipes().observe(this, data -> {
             setRecycleView(data);
         });
 
+        Intent intent = getIntent();
+        Bundle extras = intent.getExtras();
+        if (extras != null) {
+            widgetId = extras.getInt(
+                    AppWidgetManager.EXTRA_APPWIDGET_ID,
+                    AppWidgetManager.INVALID_APPWIDGET_ID);
+        }
 
-
+        if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID)
+            finish();
     }
 
     @Override
@@ -66,6 +62,7 @@ public class RecipeListActivity extends AppCompatActivity {
         editor.putInt("index", index);
         editor.putInt("top", top);
         editor.putInt("currentSpinnerSelection", spinnerSelection);
+        editor.putInt("orientation", getResources().getConfiguration().orientation);
         editor.commit();
     }
 
@@ -74,21 +71,24 @@ public class RecipeListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-        int index = preferences.getInt("index", -1);
-        int top = preferences.getInt("top", -1);
-        final int orientation = getResources().getConfiguration().orientation;
+        int index = -1;
+        int top = -1;
+        int orientation = -1;
+        index = preferences.getInt("index", -1);
+        top = preferences.getInt("top", -1);
+        orientation = preferences.getInt("orientation", -1);
 
         if (recipeRecycleView != null && index != -1 && top != -1) {
             ((GridLayoutManager) recipeRecycleView.getLayoutManager()).scrollToPositionWithOffset(index, top);
         }
 
-        if(recipeRecycleView != null && orientation != -1){
+        if (recipeRecycleView != null && orientation != -1) {
             if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                spanCount = 1;
+                ((GridLayoutManager) recipeRecycleView.getLayoutManager()).setSpanCount(3);
             } else if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                spanCount = 3;
+                ((GridLayoutManager) recipeRecycleView.getLayoutManager()).setSpanCount(1);
             }
-            ((GridLayoutManager) recipeRecycleView.getLayoutManager()).setSpanCount(spanCount);
+
         }
     }
 
@@ -96,6 +96,7 @@ public class RecipeListActivity extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putInt("Orientation", this.getRequestedOrientation());
     }
 
     @Override
@@ -106,14 +107,20 @@ public class RecipeListActivity extends AppCompatActivity {
     private void setRecycleView(List<Recipe> recipes) {
 
         if (recipes == null || recipes.size() == 0) {
-//TO-DO            setContentView(R.layout.error);
-            return;
+//To-Do            return;
         }
         recipeRecycleView = findViewById(R.id.recipe_list_recycle_view);
         recipeRecycleView.setLayoutManager(new GridLayoutManager(this.getApplicationContext(),
-                spanCount));
-        recipeListRecycleViewAdapter = new RecipeListViewRecycleAdapter(this, recipes);
+                1));
+        recipeListRecycleViewAdapter = new RecipeListViewWidgetRecycleAdapter(this, recipes, widgetId);
         recipeRecycleView.setAdapter(recipeListRecycleViewAdapter);
+    }
+
+    public  void finishWidget(){
+        Intent resultValue = new Intent();
+        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+        setResult(RESULT_OK);
+        finish();
     }
 
 }

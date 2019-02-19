@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.udacity.R;
+import com.udacity.fragment.RecipeStepVideoFragment;
 import com.udacity.model.Recipe;
 import com.udacity.utils.UIUtils;
 
@@ -22,7 +23,6 @@ public class RecipeDetailFragmentActivty extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         Recipe current_recipe = getIntent().getParcelableExtra(getString(R.string.recipe_selected));
         setSupportActionBar(toolbar);
-        System.out.println("SHIBHA current_recipe : " + current_recipe);
         if (current_recipe != null) {
             toolbar.setTitle(current_recipe.getName());
         } else {

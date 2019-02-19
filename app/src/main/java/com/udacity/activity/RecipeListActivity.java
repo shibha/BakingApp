@@ -3,6 +3,9 @@ package com.udacity.activity;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
+import android.support.test.espresso.IdlingResource;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -12,6 +15,7 @@ import android.view.View;
 import com.udacity.R;
 import com.udacity.adapter.RecipeListViewRecycleAdapter;
 import com.udacity.model.Recipe;
+import com.udacity.testingutils.SimpleIdlingResource;
 import com.udacity.viewmodel.RecipesViewModel;
 import java.util.List;
 
@@ -114,6 +118,18 @@ public class RecipeListActivity extends AppCompatActivity {
                 spanCount));
         recipeListRecycleViewAdapter = new RecipeListViewRecycleAdapter(this, recipes);
         recipeRecycleView.setAdapter(recipeListRecycleViewAdapter);
+    }
+
+    private SimpleIdlingResource mSimpleIdlingResource;
+
+    @NonNull
+    @VisibleForTesting
+    public IdlingResource getIdlingResource() {
+        if (mSimpleIdlingResource == null) {
+            mSimpleIdlingResource = new SimpleIdlingResource();
+        }
+
+        return mSimpleIdlingResource;
     }
 
 }

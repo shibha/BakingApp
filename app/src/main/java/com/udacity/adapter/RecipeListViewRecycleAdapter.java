@@ -46,6 +46,7 @@ public class RecipeListViewRecycleAdapter extends RecyclerView.Adapter<RecipeLis
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), RecipeDetailFragmentActivty.class);
                 intent.putExtra(context.getString(R.string.recipe_selected), recipe);
+                intent.putExtra(context.getString(R.string.recipe_id), recipe.getId());
                 context.startActivity(intent);
             }
         });

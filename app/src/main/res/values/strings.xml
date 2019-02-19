@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Baking Time</string>
     <string name="recipe_selected">recipeSelected</string>
+    <string name="recipe_id">recipeId</string>
     <string name="video_url">videoUrl</string>
     <string name="step_instruction">stepInstruction</string>
     <string name="step_selected">recipeSelected</string>

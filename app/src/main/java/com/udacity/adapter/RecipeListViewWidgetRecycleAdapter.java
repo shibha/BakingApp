@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -80,6 +81,7 @@ public class RecipeListViewWidgetRecycleAdapter extends RecyclerView.Adapter<Rec
                 views.setTextViewText(R.id.appwidget_text, recipe.getName());
 
                 Intent intent = new Intent(context, InstructionsListWidgetService.class);
+                Logger.getLogger(this.getClass().toString()).info("SHIBHA CHECK WIDGET ID" + widgetId);
                 intent.putExtra("id", "widget-" + widgetId);
                 views.setRemoteAdapter(R.id.appwidget_ingredient_list, intent);
                 // Instruct the widget manager to update the widget

@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -45,13 +46,19 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     public static final String ARG_RECIPE_VIDEO_URL = "video_url";
     public static final String ARG_RECIPE_STEP_DESC = "step_desc";
     private android.net.Uri videoUri;
-    private int orientation = -1;
-    private static boolean isFirst = true;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_recipe_step_video, container, false);
+        videoView = view.findViewById(R.id.step_video);
+        textView = view.findViewById(R.id.step_desc);
+        startMedia();
+        return view;
+    }
+
+
+    public void startMedia() {
         String videoURL;
         String stepDesc;
         if (getArguments() != null && getArguments().containsKey(ARG_RECIPE_VIDEO_URL)) {
@@ -61,31 +68,28 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
             videoURL = getActivity().getIntent().getStringExtra(videoUrlkey);
         }
 
-
         if (getArguments() != null && getArguments().containsKey(ARG_RECIPE_STEP_DESC)) {
             stepDesc = getArguments().getString(ARG_RECIPE_STEP_DESC);
         } else {
             String stepDesckey = getActivity().getString(R.string.step_instruction);
             stepDesc = getActivity().getIntent().getStringExtra(stepDesckey);
         }
-        videoView = view.findViewById(R.id.step_video);
-        textView = view.findViewById(R.id.step_desc);
-        textView.setText(stepDesc);
-        if (((orientation == -1 || orientation == 2) && isFirst)) {
-            Logger.getLogger(this.getClass().toString()).info("INTIALIZING " + videoURL);
-            orientation = getResources().getConfiguration().orientation;
-            if (videoURL != null) {
-                isFirst = false;
-                initializeMediaSession();
-                videoUri = Uri.parse(videoURL);
-                initializePlayer(videoUri);
-            }
-        } else {
-            isFirst = true;
-        }
-        return view;
-    }
 
+        if (textView != null) {
+            textView.setText(stepDesc);
+        }
+
+
+        if (videoURL != null && videoView != null) {
+            Logger.getLogger(this.getClass().toString()).info("videoView is nOot null" + videoURL + " , " + videoView);
+            initializeMediaSession();
+            videoUri = Uri.parse(videoURL);
+            initializePlayer(videoUri);
+        } else {
+            Logger.getLogger(this.getClass().toString()).info("videoView is NULLLLLLL null" + videoURL + " , " + videoView);
+        }
+
+    }
 
     /**
      * Initializes the Media Session to be enabled with media buttons, transport controls, callbacks
@@ -151,9 +155,9 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     public void onDestroy() {
         super.onDestroy();
         if (exoPlayer != null) {
+            Logger.getLogger(this.getClass().toString()).info("RELEASING PLAYER isFirst ");
             releasePlayer();
             mediaSession.setActive(false);
-            isFirst = true;
         }
 
     }

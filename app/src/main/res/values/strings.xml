@@ -3,6 +3,7 @@
     <string name="recipe_selected">recipeSelected</string>
     <string name="recipe_id">recipeId</string>
     <string name="video_url">videoUrl</string>
+    <string name="image_url">imageUrl</string>
     <string name="step_instruction">stepInstruction</string>
     <string name="step_selected">recipeSelected</string>
     <string name="add_widget">Add widget</string>

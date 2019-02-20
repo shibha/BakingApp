@@ -5,12 +5,13 @@
     android:orientation="vertical"
     android:id="@+id/video_fragment_id">
 
-    <com.google.android.exoplayer2.ui.SimpleExoPlayerView
-        android:id="@+id/step_video"
+    <ImageView
+        android:id="@+id/step_thumbnail"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="3" />
-
+        android:layout_weight="3"
+        android:src="@drawable/default_bake"/>
+    
 
     <TextView
         android:id="@+id/step_desc"

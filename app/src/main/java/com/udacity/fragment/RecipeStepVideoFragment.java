@@ -3,8 +3,11 @@ package com.udacity.fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -12,8 +15,11 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -32,6 +38,7 @@ import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.udacity.R;
+import com.udacity.constants.Constants;
 
 import java.util.logging.Logger;
 
@@ -40,32 +47,81 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     private SimpleExoPlayer exoPlayer;
     private SimpleExoPlayerView videoView;
     private TextView textView;
+    private ImageView imageView;
     private static MediaSessionCompat mediaSession;
     private static final String TAG = RecipeStepVideoFragment.class.getSimpleName();
     private PlaybackStateCompat.Builder stateBuilder;
     public static final String ARG_RECIPE_VIDEO_URL = "video_url";
+    public static final String ARG_RECIPE_IMAGE_URL = "image_url";
     public static final String ARG_RECIPE_STEP_DESC = "step_desc";
     private android.net.Uri videoUri;
+    private android.net.Uri imageUri;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_recipe_step_video, container, false);
+        View view = null;
+        if (isVideoPresent()) {
+            view = inflater.inflate(R.layout.fragment_recipe_step_video, container, false);
+        } else {
+            view = inflater.inflate(R.layout.fragment_recipe_step_image, container, false);
+        }
         videoView = view.findViewById(R.id.step_video);
         textView = view.findViewById(R.id.step_desc);
-        startMedia();
+        imageView = view.findViewById(R.id.step_thumbnail);
+
+        if (savedInstanceState != null) {
+            long lastPosition = savedInstanceState.getLong(Constants.SEEK_POSITON);
+            boolean playing = savedInstanceState.getBoolean(Constants.IS_PLAYING);
+            startMedia(lastPosition, playing);
+        } else {
+            startMedia(0, true);
+        }
         return view;
     }
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
 
+        if (videoView != null && videoView.getPlayer() != null) {
+            SimpleExoPlayer exoPlayer = videoView.getPlayer();
+            outState.putLong(Constants.SEEK_POSITON, exoPlayer.getCurrentPosition());
+            outState.putBoolean(Constants.IS_PLAYING, exoPlayer.getPlayWhenReady());
+        }
+    }
+    private boolean isVideoPresent() {
 
-    public void startMedia() {
+        if (getArguments() != null && getArguments().containsKey(ARG_RECIPE_VIDEO_URL)) {
+            return true;
+        }
+
+        String videoUrlkey = getActivity().getString(R.string.video_url);
+        if (getActivity().getIntent().getStringExtra(videoUrlkey) != null &&
+                getActivity().getIntent().getStringExtra(videoUrlkey).trim().length() > 0) {
+            return true;
+        }
+
+        return false;
+
+    }
+
+    public void startMedia(long position, boolean playing) {
         String videoURL;
+        String imageURL;
         String stepDesc;
         if (getArguments() != null && getArguments().containsKey(ARG_RECIPE_VIDEO_URL)) {
             videoURL = getArguments().getString(ARG_RECIPE_VIDEO_URL);
         } else {
             String videoUrlkey = getActivity().getString(R.string.video_url);
             videoURL = getActivity().getIntent().getStringExtra(videoUrlkey);
+        }
+
+
+        if (getArguments() != null && getArguments().containsKey(ARG_RECIPE_IMAGE_URL)) {
+            imageURL = getArguments().getString(ARG_RECIPE_IMAGE_URL);
+        } else {
+            String imageUrlkey = getActivity().getString(R.string.image_url);
+            imageURL = getActivity().getIntent().getStringExtra(imageUrlkey);
         }
 
         if (getArguments() != null && getArguments().containsKey(ARG_RECIPE_STEP_DESC)) {
@@ -80,15 +136,28 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
         }
 
 
-        if (videoURL != null && videoView != null) {
-            Logger.getLogger(this.getClass().toString()).info("videoView is nOot null" + videoURL + " , " + videoView);
+        if (videoURL != null && videoURL.trim().length() > 0 && videoView != null) {
             initializeMediaSession();
             videoUri = Uri.parse(videoURL);
-            initializePlayer(videoUri);
+            initializePlayer(videoUri, position, playing);
         } else {
-            Logger.getLogger(this.getClass().toString()).info("videoView is NULLLLLLL null" + videoURL + " , " + videoView);
-        }
+            if (imageView != null && imageURL != null && imageURL.trim().length() > 0) {
+                Logger.getLogger(this.getClass().toString()).info("imageURL  " + imageURL + " , " + imageView);
+                if (imageURL.equals(Constants.DEFAULT)) {
+                    imageView.setImageResource(R.drawable.default_bake);
+                } else {
+                    imageUri = Uri.parse(imageURL);
+                    Glide
+                            .with(this)
+                            .load(imageURL)
+                            .centerCrop()
+                            .placeholder(R.drawable.default_bake)
+                            .into(imageView);
 
+                }
+
+            }
+        }
     }
 
     /**
@@ -133,7 +202,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     }
 
 
-    private void initializePlayer(Uri mediaUri) {
+    private void initializePlayer(Uri mediaUri, long position, boolean playing) {
         if (exoPlayer == null) {
             TrackSelector trackSelector = new DefaultTrackSelector();
             LoadControl loadControl = new DefaultLoadControl();
@@ -145,37 +214,59 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
             String userAgent = Util.getUserAgent(this.getActivity(), getString(R.string.app_name));
             MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(
                     this.getActivity(), userAgent), new DefaultExtractorsFactory(), null, null);
+            System.out.println("SEEK to state is not null" + position + " ," + playing);
             exoPlayer.prepare(mediaSource);
-            exoPlayer.setPlayWhenReady(true);
+            exoPlayer.setPlayWhenReady(playing);
+            if (position != 0) {
+                exoPlayer.seekTo(position);
+            }
         }
     }
 
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (exoPlayer != null) {
-            Logger.getLogger(this.getClass().toString()).info("RELEASING PLAYER isFirst ");
-            releasePlayer();
-            mediaSession.setActive(false);
-        }
-
-    }
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//        if (exoPlayer != null) {
+//            Logger.getLogger(this.getClass().toString()).info("RELEASING PLAYER isFirst ");
+//            releasePlayer();
+//            mediaSession.setActive(false);
+//        }
+//
+//    }
 
 
     private void releasePlayer() {
-        exoPlayer.stop();
-        exoPlayer.release();
-        exoPlayer = null;
+        if (exoPlayer != null) {
+            exoPlayer.stop();
+            exoPlayer.release();
+            exoPlayer = null;
+        }
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (Util.SDK_INT <= 23) {
+            releasePlayer();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (Util.SDK_INT > 23) {
+            releasePlayer();
+        }
+    }
 
     @Override
     public void onTimelineChanged(Timeline timeline, Object manifest) {
     }
 
     @Override
-    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray
+            trackSelections) {
     }
 
     @Override
